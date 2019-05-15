@@ -1,0 +1,10 @@
+[package]
+name = "panic-test"
+version = "0.1.0"
+authors = ["tqd <903843602@qq.com>"]
+edition = "2018"
+
+[dependencies]
+
+[profile.release]
+panic = 'abort'
