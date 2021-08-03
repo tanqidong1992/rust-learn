@@ -16,6 +16,7 @@ Cargo.lock
 
 # End of https://www.gitignore.io/api/rust
 
-*/target/
+**/target/
 /target/
 */Cargo.lock
+/.metadata/
