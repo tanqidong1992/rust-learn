@@ -1,30 +1,56 @@
+mod test;
+
 use ffmpeg_next as ffmpeg;
-use ffmpeg_next::format;
+use ffmpeg_next::{format, log};
 fn main() {
-    let path=String::from("test-data/video.mp4");
-    let mut input =ffmpeg::format::input(&path).expect("Could not read video file");
-    let video_stream= find_first_video_stream(&input)
-        .expect("");
 
-    let mut outputContext =ffmpeg::format::output_as(&String::from("test-output/hls/test.m3u8"), "hls")
-        .expect("Could not allocate hls output context");
-    let mut outVideoStream=outputContext.add_stream(video_stream.codec()).expect("");
-     outVideoStream.set_parameters(video_stream.parameters());
+    ffmpeg::init().unwrap();
+    log::set_level(log::Level::Warning);
+    let inputPath =String::from("test-data/video.mp4");
+    let outputPath=String::from("test-output/hls/test.m3u8");
+    let mut inputContext =ffmpeg::format::input(&inputPath).unwrap();
+    let mut outputContext =ffmpeg::format::output_as(&outputPath, "hls").unwrap();
+
+    let inputVideoStream = find_first_video_stream(&inputContext).unwrap();
+
+
+    //let encoder=ffmpeg::codec::encoder::find(ffmpeg::codec::Id::None).unwrap();
+    let mut outVideoStream=outputContext
+        .add_stream(ffmpeg::codec::encoder::find(ffmpeg::codec::Id::None)).unwrap();
+    outVideoStream.set_parameters(inputVideoStream.parameters());
+
     unsafe {
-        (*outVideoStream.as_mut_ptr()).codec_tag=0;
+        (*outVideoStream.parameters().as_mut_ptr()).codec_tag=0;
     }
-    outputContext.set_metadata(input.metadata().to_owned());
-    outputContext.write_header();
-
-    for (stream, mut packet) in input.packets(){
-        if stream.id() == video_stream.id(){
-            packet.rescale_ts(stream.time_base(),outVideoStream.time_base());
+    let outputTimeBase=outVideoStream.time_base();
+    let outputStreamIndex =outVideoStream.index();
+    let outputTimeBase=outputContext.stream(outputStreamIndex).unwrap().time_base();
+    println!("out TimeBase:{}",outputTimeBase);
+    outputContext.set_metadata(inputContext.metadata().to_owned());
+    outputContext.write_header().unwrap();
+    let outputTimeBase=outputContext.stream(outputStreamIndex).unwrap().time_base();
+    println!("out TimeBase:{}",outputTimeBase);
+    let videoStreamIndex = inputVideoStream.index();
+    let mut pts=1;
+    for (stream, mut packet) in inputContext.packets(){
+        //println!("ist:{} --> ost:{}", stream.index(), videoStreamIndex);
+        if stream.index() == videoStreamIndex {
+            //let outputTimeBase=outputContext.stream(outputStreamIndex).unwrap().time_base();
+           //println!("in timeBase:{},out TimeBase:{}",stream.time_base(),outputTimeBase);
+            packet.rescale_ts(stream.time_base(),outputTimeBase);
             packet.set_position(-1);
-            packet.set_stream(0);
+            packet.set_duration(1);
+            packet.set_stream(outputStreamIndex);
+            //packet.set_pts(Some(pts));
+            //pts+=1;
+            //println!("pts {:?}",packet.pts());
+            //println!("packet size {:?}",packet.size());
             packet.write_interleaved(& mut outputContext).unwrap();
+
         }
     }
-    outputContext.write_trailer();
+    outputContext.write_trailer().unwrap();
+
 }
 fn find_first_video_stream(input:&ffmpeg::format::context::Input) -> Result<ffmpeg::format::stream::Stream,String>{
     let stream_size=input.nb_streams();
