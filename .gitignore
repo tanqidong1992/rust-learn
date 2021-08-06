@@ -20,3 +20,5 @@ Cargo.lock
 /target/
 */Cargo.lock
 /.metadata/
+**/.idea
+**/*.iml
