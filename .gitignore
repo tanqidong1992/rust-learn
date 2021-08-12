@@ -22,3 +22,4 @@ Cargo.lock
 /.metadata/
 **/.idea
 **/*.iml
+**/.vscode/
