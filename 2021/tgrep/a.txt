@@ -1,0 +1,6 @@
+The Java programming language is strongly and statically typed.
+This specification clearlydistinguishes between the compile-time errors that can and must be detected at compile time,
+andthose that occur at run time.
+Compile time normally consists of translating programs into a machine-independent byte code representation.
+Run-time activities include loading and linking of the classesneeded to execute a program,
+optional machine code generation and dynamic optimization of theprogram, and actual program execution.
