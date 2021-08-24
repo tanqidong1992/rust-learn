@@ -1,43 +1,40 @@
 use dh;
+
+
 fn main() {
-    println!("Hello, world!");
+
     let mut version=0;
     unsafe{
         version=dh::CLIENT_GetSDKVersion();
     }
     println!("dh sdk version:{}",version);
-    let userData:i64=0;
+    let user_data:i64=0;
     unsafe {
-        let initResult=dh::CLIENT_Init(Some(reconnect),userData);
+        let initResult=dh::CLIENT_Init(Some(reconnect),user_data);
         println!("dh sdk init result:{}",initResult);
-        let nWaitTime = 5000; // 登录请求响应超时时间设置为 5s
-        let nTryTimes = 3; // 登录时尝试建立链接 3 次
-        dh::CLIENT_SetConnectTime(nWaitTime,nTryTimes);
+        let wait_time = 5000; // 登录请求响应超时时间设置为 5s
+        let try_times = 3; // 登录时尝试建立链接 3 次
+        dh::CLIENT_SetConnectTime(wait_time,try_times);
 
         // 此操作为可选操作
-        //let stuNetParm = dh::NET_PARAM{};
-        //stuNetParm.nConnectTime = 3000; // 登录时尝试建立链接的超时时间
-        //dh::CLIENT_SetNetworkParam(stuNetParm);
+        let mut net_param:dh::NET_PARAM=Default::default();
+        net_param.nConnectTime = 3000; // 登录时尝试建立链接的超时时间
+        dh::CLIENT_SetNetworkParam(&mut net_param);
 
-        let mut stInparam:dh::NET_IN_LOGIN_WITH_HIGHLEVEL_SECURITY=Default::default();
+        let mut in_param:dh::NET_IN_LOGIN_WITH_HIGHLEVEL_SECURITY=Default::default();
         
-        stInparam.szIP=to_c_char_array("192.168.0.199");
-        stInparam.nPort=8888;
-        stInparam.szUserName=to_c_char_array("admin");
-        stInparam.szPassword=to_c_char_array("admin12345");
-        stInparam.emSpecCap=dh::tagEM_LOGIN_SPAC_CAP_TYPE_EM_LOGIN_SPEC_CAP_TCP;
+        in_param.szIP=to_c_char_array("192.168.0.199");
+        in_param.nPort=8888;
+        in_param.szUserName=to_c_char_array("admin");
+        in_param.szPassword=to_c_char_array("admin12345");
+        in_param.emSpecCap=dh::tagEM_LOGIN_SPAC_CAP_TYPE_EM_LOGIN_SPEC_CAP_TCP;
 
-        let mut stOutParam:dh::NET_OUT_LOGIN_WITH_HIGHLEVEL_SECURITY=Default::default();
-        /**
-            dwSize:0,
-            stuDeviceInfo:Default::default(),
-            nError:0,
-            byReserved:[0l,132]
-        };
-        */
+        let mut out_param:dh::NET_OUT_LOGIN_WITH_HIGHLEVEL_SECURITY=Default::default();
+        
         // 登录设备
-        let g_lLoginHandle = dh::CLIENT_LoginWithHighLevelSecurity(&mut stInparam, &mut stOutParam);
-        println!("login handle:{}",g_lLoginHandle);
+        let login_handle = dh::CLIENT_LoginWithHighLevelSecurity(&mut in_param, &mut out_param);
+        println!("login handle:{}",login_handle);
+        println!("last error code:{},detail:{:?}",dh::CLIENT_GetLastError(),out_param.nError);
 
     }
 

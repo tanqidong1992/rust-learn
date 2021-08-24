@@ -8,8 +8,8 @@ fn main() {
     // Tell cargo to invalidate the built crate whenever the wrapper changes
     println!("cargo:rerun-if-changed=wrapper.h");
     //cargo:rustc-link-search=[KIND=]PATH
-    let cargoManifestDir=env::var("CARGO_MANIFEST_DIR").unwrap();
-    println!("cargo:rustc-link-search=all={}", cargoManifestDir+"/x64");
+    let cargo_manifest_dir=env::var("CARGO_MANIFEST_DIR").unwrap();
+    println!("cargo:rustc-link-search=all={}", cargo_manifest_dir+"/x64");
 
     println!("cargo:rustc-link-lib=dylib={}", "avnetsdk");
     println!("cargo:rustc-link-lib=dylib={}", "dhconfigsdk");
