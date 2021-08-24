@@ -13,7 +13,6 @@ fn main() {
 
     let inputVideoStream = find_first_video_stream(&inputContext).unwrap();
 
-
     //let encoder=ffmpeg::codec::encoder::find(ffmpeg::codec::Id::None).unwrap();
     let mut outVideoStream=outputContext
         .add_stream(ffmpeg::codec::encoder::find(ffmpeg::codec::Id::None)).unwrap();

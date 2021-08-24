@@ -62,3 +62,86 @@ mod tests{
         octx.write_trailer().unwrap();
     }
 }
+
+#[cfg(test)]
+mod extract_frame_test{
+
+    use ffmpeg_next::frame::Video;
+    use std::io::Write;
+
+
+    #[test]
+    fn transfer_stream(){
+        let url=String::from("rtsp://admin:admin12345@192.168.0.199:554/cam/realmonitor?channel=1/subtype=0");
+        use ffmpeg_next as ffmpeg;
+        let mut input=ffmpeg::format::input(&url).unwrap();
+        let stream=input.streams().best(ffmpeg::media::Type::Video)
+            .unwrap();
+        let video_stream_index=stream.index();
+        let mut decoder=stream.codec().decoder().video().unwrap();
+        let mut scaler = ffmpeg::software::scaling::Context::get(decoder.format(),
+                                                                 decoder.width(),decoder.height(),
+                                                                 ffmpeg::format::Pixel::RGB24,decoder.width(),decoder.height(),ffmpeg::software::scaling::Flags::BILINEAR).unwrap();
+        let mut frame_index=0;
+        let mut receive_and_process_decoded_frames=|decoder:&mut ffmpeg::decoder::Video| -> Result<(),ffmpeg::Error>{
+            let mut decoded=ffmpeg::frame::Video::empty();
+            while decoder.receive_frame(&mut decoded).is_ok() {
+                let mut rgb_frame=Video::empty();
+                scaler.run(&decoded,&mut rgb_frame).unwrap();
+                if frame_index>10 && frame_index <20 {
+                    save_frame(&rgb_frame, frame_index).unwrap();
+                }
+                frame_index+=1;
+            }
+            Ok(())
+        };
+        for (stream,packet) in input.packets(){
+            if stream.index() == video_stream_index{
+                decoder.send_packet(&packet).unwrap();
+                receive_and_process_decoded_frames(&mut decoder);
+
+            }
+        }
+    }
+
+    #[test]
+    fn test1(){
+        use ffmpeg_next as ffmpeg;
+        let mut input=ffmpeg::format::input(&"test-data/video.mp4").unwrap();
+        let stream=input.streams().best(ffmpeg::media::Type::Video)
+            .unwrap();
+        let video_stream_index=stream.index();
+        let mut decoder=stream.codec().decoder().video().unwrap();
+        let mut scaler = ffmpeg::software::scaling::Context::get(decoder.format(),
+        decoder.width(),decoder.height(),
+        ffmpeg::format::Pixel::RGB24,decoder.width(),decoder.height(),ffmpeg::software::scaling::Flags::BILINEAR).unwrap();
+        let mut frame_index=0;
+        let mut receive_and_process_decoded_frames=|decoder:&mut ffmpeg::decoder::Video| -> Result<(),ffmpeg::Error>{
+            let mut decoded=ffmpeg::frame::Video::empty();
+            while decoder.receive_frame(&mut decoded).is_ok() {
+                let mut rgb_frame=Video::empty();
+                scaler.run(&decoded,&mut rgb_frame).unwrap();
+                if frame_index>10 && frame_index <20 {
+                    save_frame(&rgb_frame, frame_index).unwrap();
+                }
+                frame_index+=1;
+            }
+            Ok(())
+        };
+        for (stream,packet) in input.packets(){
+            if stream.index() == video_stream_index{
+                decoder.send_packet(&packet).unwrap();
+                receive_and_process_decoded_frames(&mut decoder);
+
+            }
+        }
+    }
+    fn save_frame(frame:& ffmpeg_next::frame::Video,frame_index:i32)-> Result<(),std::io::Error>{
+        let mut file = std::fs::File::create(format!("frame{}.ppm",frame_index)).unwrap();
+        file.write_all(format!("P6\n{} {}\n255\n",frame.width(),frame.height()).as_bytes());
+        file.write_all(frame.data(0))?;
+        Ok(())
+    }
+
+
+}
