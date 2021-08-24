@@ -19,29 +19,25 @@ fn main() {
         //stuNetParm.nConnectTime = 3000; // 登录时尝试建立链接的超时时间
         //dh::CLIENT_SetNetworkParam(stuNetParm);
 
-        let mut stInparam=dh::NET_IN_LOGIN_WITH_HIGHLEVEL_SECURITY{
-             szIP: to_c_char_array("192.168.0.199"),
-             nPort: 8888,
-             szUserName: to_c_char_array("admin"),
-             szPassword: to_c_char_array("admin12345"),
-             emSpecCap: dh::tagEM_LOGIN_SPAC_CAP_TYPE_EM_LOGIN_SPEC_CAP_TCP,
-             dwSize: 0,
-             pCapParam: 0,
-             byReserved: [0l,132],
+        let mut stInparam:dh::NET_IN_LOGIN_WITH_HIGHLEVEL_SECURITY=Default::default();
+        
+        stInparam.szIP=to_c_char_array("192.168.0.199");
+        stInparam.nPort=8888;
+        stInparam.szUserName=to_c_char_array("admin");
+        stInparam.szPassword=to_c_char_array("admin12345");
+        stInparam.emSpecCap=dh::tagEM_LOGIN_SPAC_CAP_TYPE_EM_LOGIN_SPEC_CAP_TCP;
 
-        };
-
-
-
-        let mut stOutParam=dh::NET_OUT_LOGIN_WITH_HIGHLEVEL_SECURITY{
+        let mut stOutParam:dh::NET_OUT_LOGIN_WITH_HIGHLEVEL_SECURITY=Default::default();
+        /**
             dwSize:0,
-            stuDeviceInfo:dh::NET_DEVICEINFO_Ex{},
+            stuDeviceInfo:Default::default(),
             nError:0,
             byReserved:[0l,132]
         };
-        
+        */
         // 登录设备
         let g_lLoginHandle = dh::CLIENT_LoginWithHighLevelSecurity(&mut stInparam, &mut stOutParam);
+        println!("login handle:{}",g_lLoginHandle);
 
     }
 
@@ -60,8 +56,6 @@ use std::os::raw::{
     c_char,
     c_int
 };
-use std::ptr::null;
-use std::ops::IndexMut;
 
 unsafe extern "C" fn reconnect(lLoginID: c_long, pchDVRIP: *mut c_char, nDVRPort: c_int, dwUser: c_long){
 

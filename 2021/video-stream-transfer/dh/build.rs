@@ -22,6 +22,7 @@ fn main() {
     let bindings = bindgen::Builder::default()
         .detect_include_paths(true)
         .derive_debug(true)
+        .derive_default(true)
         .clang_args(["-x","c++"])
         // The input header we would like to generate
         // bindings for.
