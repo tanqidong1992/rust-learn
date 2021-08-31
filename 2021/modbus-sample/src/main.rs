@@ -1,22 +1,27 @@
 use serial::SerialPort;
 use std::time::Duration;
 use std::io::{Read, Write};
+use std::thread;
 
 fn main() {
     let mut port=open_port("/dev/ttyS0").unwrap();
     let mut req=vec![0x01,0x03,0x00,0x00,0x00,0x01];
     attach_crc(&mut req);
-    port.write_all(&req).unwrap();
     let mut buf:[u8;256] = [0;256];
-    loop {
-        if let Ok(n) = port.read(&mut buf[..]) {
-            for i in 0..n {
-                print!("{:02x}", buf[i]);
-            }
-            println!("");
-            break;
-        };
-    }
+
+    let thread_handler=thread::spawn(move ||{
+        loop {
+            port.write_all(&req).unwrap();
+            if let Ok(n) = port.read(&mut buf[..]) {
+                for i in 0..n {
+                    print!("{:02x}", buf[i]);
+                }
+                println!();
+            };
+            thread::sleep(Duration::from_millis(2000))
+        }
+    });
+    thread_handler.join().unwrap();
 
 }
 
