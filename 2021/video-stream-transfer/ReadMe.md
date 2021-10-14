@@ -3,6 +3,7 @@
 1. Rust 1.54
 2. VCPKG
 3. Visual Studio Code.
+4. LLVM,LLVM-Config.
 4. ...
 ## 构建
 ```shell
